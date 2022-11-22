@@ -1,0 +1,37 @@
+#include <iostream>
+#include <mutex>
+#include <thread>
+#include <mutex>
+
+int main()
+{
+    std::mutex m1;
+    std::mutex m2;
+
+    auto f1 = [&m1, &m2]() {
+        std::unique_lock<std::mutex> lk1(m1, std::defer_lock);
+        std::unique_lock<std::mutex> lk2(m2, std::defer_lock);
+        std::lock(lk1, lk2);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    };
+
+    auto f2 = [&m1, &m2]() {
+        std::unique_lock<std::mutex> lk1(m1, std::defer_lock);
+        std::unique_lock<std::mutex> lk2(m2, std::defer_lock);
+        std::lock(lk1, lk2);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    };
+
+    std::thread thread1([&f1, &f2]() {
+        f1();
+        });
+
+    std::thread thread2([&f1, &f2]() {
+        f2();
+        });
+
+    thread1.join();
+    thread2.join();
+
+    return 0;
+}
